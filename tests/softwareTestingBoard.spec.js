@@ -18,7 +18,104 @@ test('Verify that search box is working properly', async ({ page }) => {
     await expect(productName.getByText('jacket')).toBeVisible();
 });
 
+test('Verify that Sort functionality is working properly', async ({ page }) => {
 
+    // Navigate to the site
+    console.log('Opening site');
+    await page.goto('https://magento.softwaretestingboard.com/');
+  
+    // Locate link to product list
+    console.log('Find link to product list');
+    const findLinkListItem = page.getByRole('link', { name: 'New Luma Yoga Collection Get' });
+    await findLinkListItem.click();
+  
+    // Select the 'Sort By' dropdown and choose the 'Price' option.
+    console.log('Select the "Price" option in the "Sort By" dropdown...');
+    const selectSoryBy = page.getByLabel('Sort By');
+    await selectSoryBy.click();
+    await selectSoryBy.selectOption('Price');
+  
+    await page.waitForLoadState();
+  
+    // Taking all product elements
+    const productItems = await page.locator('.product-item-info');
+  
+    // Get the number of existing products
+    const productCount = await productItems.count();
+  
+    const productPricesLowtoHigh = [];
+  
+  // Iterate to get the price of each product
+  for (let i = 0; i < productCount; i++) {
+      const priceLocator = productItems.nth(i).locator('.price-box');
+      const priceText = await priceLocator.textContent();
+  
+      if (priceText) {
+          // Using regex to search for numbers after the $ symbol
+          const regex = /\$(\d+(\.\d{1,2})?)/;
+          const match = priceText.trim().match(regex);
+  
+          if (match) {
+              const price = parseFloat(match[1]); // Taking price as a number
+  
+              // Adding prices to an array
+              productPricesLowtoHigh.push(price);
+  
+              console.log(`Product price ${i + 1}: $${price}`);
+          } else {
+              console.log(`Product price ${i + 1} does not match format.`);
+          }
+      }
+  }
+  
+  // Validate the price order from lowest to highest
+  const isPriceSortedLowToHigh = productPricesLowtoHigh.every((price, index, array) => 
+      index === 0 || price >= array[index - 1]
+  );
+  
+  console.log(isPriceSortedLowToHigh ? '✅ Price set Lowest to Highest.' : '❌ Prices are not sorted correctly.');
+  expect(isPriceSortedLowToHigh).toBe(true);
+  
+  const setDescending = page.getByRole('link', { name: ' Set Descending Direction' });
+  await setDescending.click();
+  
+  await page.waitForLoadState();
+  
+  const productPricesHightoLow = [];
+  
+  // Iterate to get the price of each product
+  for (let i = 0; i < productCount; i++) {
+    const priceLocator = productItems.nth(i).locator('.price-box');
+    const priceText = await priceLocator.textContent();
+  
+    if (priceText) {
+        // Using regex to search for numbers after the $ symbol
+        const regex = /\$(\d+(\.\d{1,2})?)/;
+        const match = priceText.trim().match(regex);
+  
+        if (match) {
+            const price = parseFloat(match[1]); // Taking price as a number
+  
+            // Adding prices to an array
+            productPricesHightoLow.push(price);
+  
+            console.log(`Product price ${i + 1}: $${price}`);
+        } else {
+            console.log(`Product price ${i + 1} does not match format.`);
+        }
+    }
+  }
+  
+  // Validate the price order from highest to loweest
+  const isPriceSortedHighToLow = productPricesHightoLow.every((price, index, array) => 
+    index === 0 || price <= array[index - 1]
+  );
+  
+  console.log(isPriceSortedHighToLow ? '✅ Price set Highest to Lowest.' : '❌ Prices are not sorted correctly.');
+  expect(isPriceSortedHighToLow).toBe(true);
+  
+  });
+  
 
 test('Verify Add to Cart is working correctly', async ({ page }) => {
     const searchInput = page.locator('[id="search"]');
